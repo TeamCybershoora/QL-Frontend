@@ -48,7 +48,7 @@ useEffect(() => {
 
   const handleSave = () => {
     if (editedName.trim()) {
-      axios.post('http://localhost:3002/update/business/name', 
+      axios.post('https://ql-backend.onrender.com/update/business/name', 
         { name: editedName, email },     // body me email and name dono bhejo
         { withCredentials: true }
       )
