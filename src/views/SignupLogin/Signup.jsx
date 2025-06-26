@@ -46,20 +46,31 @@ function Signup() {
 
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const handleSignup = (e) => {
-    e.preventDefault();
-    if (!isEmailVerified) return toast.warn("Please verify your email first!");
-    axios.post(`${API_BASE}/signup`, { firstName, lastName, email, password })
-    .then((res) => {
+  axios.post(`${API_BASE}/signup`, { firstName, lastName, email, password })
+  .then((res) => {
+    try {
+      console.log("Signup Response:", res);
       const user = res.data.user;
+      if (!user) throw new Error("User not found in response");
+
       Cookies.set("token", res.data.token, { expires: 365 });
       Cookies.set("firstName", user.firstName, { expires: 365 });
       Cookies.set("lastName", user.lastName, { expires: 365 });
       Cookies.set("email", user.email, { expires: 365 });
-      toast.success("Signup successful!"); 
+      Cookies.set("picLink", user.picLink || "", { expires: 365 });
+
+      toast.success("Signup successful!");
       navigate("/dashboard");
-    }).catch(() => toast.error("Signup failed!"));
-  };
+    } catch (err) {
+      console.error("Frontend error during signup:", err);
+      toast.error("Signup failed (client)!");
+    }
+  })
+  .catch((err) => {
+    console.error("Axios error:", err.response || err.message);
+    toast.error("Signup failed (server)!");
+  });
+
 
   return (
     <Container fluid style={{ overflow: 'hidden', height: '100vh', position: 'relative' }}>
