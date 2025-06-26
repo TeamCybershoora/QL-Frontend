@@ -52,11 +52,10 @@ function Signup() {
     axios.post(`${API_BASE}/signup`, { firstName, lastName, email, password })
     .then((res) => {
       const user = res.data.user;
-              Cookies.set("token", res.data.token, { expires: 365 });
-              Cookies.set("firstName", user.firstName, { expires: 365 });
-              Cookies.set("lastName", user.lastName, { expires: 365 });
-              Cookies.set("email", user.email, { expires: 365 });
-              Cookies.set("picLink", user.picLink || "", { expires: 365 });
+      Cookies.set("token", res.data.token, { expires: 365 });
+      Cookies.set("firstName", user.firstName, { expires: 365 });
+      Cookies.set("lastName", user.lastName, { expires: 365 });
+      Cookies.set("email", user.email, { expires: 365 });
       toast.success("Signup successful!"); 
       navigate("/dashboard");
     }).catch(() => toast.error("Signup failed!"));
