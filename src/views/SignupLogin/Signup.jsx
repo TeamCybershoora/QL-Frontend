@@ -51,9 +51,9 @@ function Signup() {
     if (!isEmailVerified) return toast.warn("Please verify your email first!");
     axios.post(`${API_BASE}/signup`, { firstName, lastName, email, password })
     .then((res) => {
-      console.log(res.data);
-      const user = res.data.user;
-              Cookies.set("token", res.data.token, { expires: 365 });
+      console.log(res.data.data);
+      const user = res.data.data.user;
+              Cookies.set("token", res.data.data.token, { expires: 365 });
               Cookies.set("firstName", user.firstName, { expires: 365 });
               Cookies.set("lastName", user.lastName, { expires: 365 });
               Cookies.set("email", user.email, { expires: 365 });
