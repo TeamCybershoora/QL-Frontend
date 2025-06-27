@@ -67,11 +67,11 @@ function Signup() {
       navigate("/dashboard");
     } catch (err) {
       console.error("Frontend error during signup:", err);
-      toast.error("Signup failed (client)!");
+      toast.error("Signup failed client!");
     }
   }).catch((err) => {
     console.error("Axios error:", err.response || err.message);
-    toast.error("Signup failed (server)!");
+    toast.error("Signup failed server!");
   });
   }
   return (
