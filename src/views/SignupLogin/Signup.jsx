@@ -64,7 +64,7 @@ function Signup() {
       Cookies.set("picLink", user.picLink || "", { expires: 365 });
 
       toast.success("Signup successful!");
-      navigate("/dashboard");
+      navigate("/login");
     } catch (err) {
       console.error("Frontend error during signup:", err);
       toast.error("Signup failed client!");
