@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
 import { useSpring, animated } from 'react-spring';
+import Cookies from 'js-cookie';
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 function Signup() {
@@ -46,7 +47,10 @@ function Signup() {
 
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  axios.post(`${API_BASE}/signup`, { firstName, lastName, email, password })
+  const handleSignup = (e) => {
+    e.preventDefault();
+    if (!isEmailVerified) return toast.warn("Please verify your email first!");
+    axios.post(`${API_BASE}/signup`, { firstName, lastName, email, password })
   .then((res) => {
     try {
       console.log("Signup Response:", res);
@@ -65,13 +69,11 @@ function Signup() {
       console.error("Frontend error during signup:", err);
       toast.error("Signup failed (client)!");
     }
-  })
-  .catch((err) => {
+  }).catch((err) => {
     console.error("Axios error:", err.response || err.message);
     toast.error("Signup failed (server)!");
   });
-
-
+  }
   return (
     <Container fluid style={{ overflow: 'hidden', height: '100vh', position: 'relative' }}>
       {/* Purple circles */}
