@@ -1,6 +1,7 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { saveFolderHandle } from "../FolderDB";
 import { Button, Container, Row, Col, Card, Form } from 'react-bootstrap';
 import { FaFacebookF, FaTwitter, FaGoogle, FaGithub } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
@@ -9,6 +10,9 @@ import { useNavigate } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
 import { useSpring, animated } from 'react-spring';
 import Cookies from 'js-cookie';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
+import Swal from 'sweetalert2';
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 function Signup() {
@@ -21,6 +25,54 @@ function Signup() {
   const [otpSent, setOtpSent] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
 
+  const handleGoogleLogin = async (credentialResponse) => {
+    const token = credentialResponse.credential;
+     const decoded = jwtDecode(token);
+  
+    // Optional: console.log(decoded); // for debugging
+  
+    try {
+      const res = await axios.post(`${API_BASE}/auth/google`, { token });
+      const { token: jwtToken, user } = res.data;
+  
+      Cookies.set("token", jwtToken, { expires: 7 });
+      Cookies.set("firstName", user.firstName, { expires: 7 });
+      Cookies.set("lastName", user.lastName, { expires: 7 });
+      Cookies.set("email", user.email, { expires: 7 });
+      Cookies.set("picLink", user.picLink || "", { expires: 7 });
+  
+      toast.success("Login successful!");
+  
+      Swal.fire({
+        title: 'Allow access to local folder?',
+        text: 'We need permission to store data in your local system folder.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Allow',
+        cancelButtonText: 'Deny',
+        reverseButtons: true
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const dirHandle = await window.showDirectoryPicker();
+            await saveFolderHandle(dirHandle);
+            Cookies.set("folderAccess", true, { expires: 365 });
+            Cookies.set("dirName", dirHandle.name, { expires: 365 });
+            console.log("Folder access granted:", dirHandle);
+            navigate("/dashboard");
+          } catch (err) {
+            toast.error("Folder access denied!");
+            navigate("/dashboard");
+          }
+        } else {
+          Cookies.set("folderAccess", false, { expires: 365 });
+          navigate("/dashboard");
+        }
+      });
+    } catch (error) {
+      toast.error("Invalid credentials!");
+    }
+  };
   useEffect(() => {
     document.body.style.background = 'radial-gradient(circle at top left,#3b3b98, #000)';
     return () => { document.body.style.background = ''; };
@@ -47,13 +99,15 @@ function Signup() {
 
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const handleSignup = (e) => {
-    e.preventDefault();
-    if (!isEmailVerified) return toast.warn("Please verify your email first!");
-    axios.post(`${API_BASE}/signup`, { firstName, lastName, email, password })
-  .then((res) => {
-    try {
-      console.log("Signup Response:", res);
+const handleSignup = (e) => {
+  e.preventDefault();
+
+  if (!isEmailVerified) {
+    return toast.warn("Please verify your email first!");
+  }
+
+  axios.post(`${API_BASE}/signup`, { firstName, lastName, email, password })
+    .then(async (res) => {
       const user = res.data.user;
       if (!user) throw new Error("User not found in response");
 
@@ -64,16 +118,38 @@ function Signup() {
       Cookies.set("picLink", user.picLink || "", { expires: 365 });
 
       toast.success("Signup successful!");
-      navigate("/login");
-    } catch (err) {
-      console.error("Frontend error during signup:", err);
-      toast.error("Signup failed client!");
-    }
-  }).catch((err) => {
-    console.error("Axios error:", err.response || err.message);
-    toast.error("Signup failed server!");
-  });
-  }
+
+      const result = await Swal.fire({
+        title: 'Allow access to local folder?',
+        text: 'We need permission to store data in your local system folder.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Allow',
+        cancelButtonText: 'Deny',
+        reverseButtons: true
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const dirHandle = await window.showDirectoryPicker();
+          await saveFolderHandle(dirHandle);
+          Cookies.set("folderAccess", true, { expires: 365 });
+          Cookies.set("dirName", dirHandle.name, { expires: 365 });
+          console.log("Folder access granted:", dirHandle);
+          navigate("/dashboard");
+        } catch (err) {
+          toast.error("Folder access denied!");
+          navigate("/dashboard");
+        }
+      } else {
+        Cookies.set("folderAccess", false, { expires: 365 });
+        navigate("/dashboard");
+      }
+    })
+    .catch((err) => {
+      toast.error(err.response?.data?.message || "Signup failed!");
+    });
+};
   return (
     <Container fluid style={{ overflow: 'hidden', height: '100vh', position: 'relative' }}>
       {/* Purple circles */}
@@ -151,11 +227,11 @@ function Signup() {
                     <small>Already have an account? <a style={{ cursor: 'pointer' }} onClick={() => navigate('/login')}>Log in</a></small>
                     <hr />
                     <small>or sign up with:</small>
-                    <div style={{ marginTop: '0.5rem' }}>
-                      <Button variant="link" style={{ color: '#1266f1', margin: '0 5px' }}><FaFacebookF /></Button>
-                      <Button variant="link" style={{ color: '#1266f1', margin: '0 5px' }}><FaGoogle /></Button>
-                      <Button variant="link" style={{ color: '#1266f1', margin: '0 5px' }}><FaTwitter /></Button>
-                      <Button variant="link" style={{ color: '#1266f1', margin: '0 5px' }}><FaGithub /></Button>
+                    <div className="text-center mt-3">
+                        <GoogleLogin
+                          onSuccess={handleGoogleLogin}
+                          onError={() => toast.error("Login Failed")}
+                        />
                     </div>
                   </div>
                 </Form>

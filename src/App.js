@@ -1,6 +1,8 @@
 import React, { Suspense, useEffect } from 'react'
 import { HashRouter, Route, Routes } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useSelector } from 'react-redux';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
@@ -36,6 +38,7 @@ const App = () => {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
+     <GoogleOAuthProvider clientId={clientId}>
     <HashRouter>
       <Suspense
         fallback={
@@ -53,6 +56,7 @@ const App = () => {
         </Routes>
       </Suspense>
     </HashRouter>
+    </GoogleOAuthProvider>
   )
 }
 
