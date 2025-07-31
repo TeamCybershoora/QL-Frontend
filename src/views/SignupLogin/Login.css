@@ -1,0 +1,83 @@
+.login-wrapper {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  min-height: 100vh;
+  padding: 2rem;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* --- Text Section --- */
+.text-section {
+  flex: 1 1 ;
+  color: white;
+  padding: 2rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 50rem;
+}
+
+/* Heading inside text */
+.text-section h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  
+}
+
+/* --- Form Section --- */
+.form-section {
+  flex: 1 1 ;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Card style */
+.login-card {
+  width: 22rem;
+
+}
+.login-card-body {
+  margin-right: 5rem;
+  width: 22rem;
+  
+}
+
+/* ✅ Small screen fix */
+@media (max-width: 768px) {
+  .login-wrapper {
+    flex-direction: column;
+    padding: 1.5rem 1rem;
+    gap: 1rem;
+  }
+
+  .text-section {
+    text-align: center;
+    padding: 1rem;
+    margin-left: -15rem; /* ✅ Remove extra top space */
+    margin-top: -10rem;
+
+  }
+
+  .form-section {
+    width: 100%;
+    padding: 0 1rem;
+    order: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: -13.5rem; /* ✅ Remove extra top space */
+
+  }
+
+  .login-card {
+    width: 80%;
+    margin: 0 auto;
+    margin-top: -25rem;
+
+  }
+}

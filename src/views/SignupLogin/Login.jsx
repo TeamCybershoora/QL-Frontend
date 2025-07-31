@@ -3,7 +3,8 @@ import { saveFolderHandle } from "../FolderDB";
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Button, Container, Row, Col, Card, Form } from 'react-bootstrap';
-import { FaFacebookF, FaTwitter, FaGoogle, FaGithub } from 'react-icons/fa';
+// FaFacebookF, FaTwitter, FaGoogle, FaGithub imported but not used, can be removed if not needed later.
+// import { FaFacebookF, FaTwitter, FaGoogle, FaGithub } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import 'react-toastify/dist/ReactToastify.css';
@@ -13,7 +14,8 @@ import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 
-
+// Import the new CSS file
+import './Login.css'; // <--- NEW LINE
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -30,58 +32,59 @@ function Login() {
   const [resendCount, setResendCount] = useState(Number(Cookies.get("resendCount") || 0));
   const [cooldown, setCooldown] = useState(0);
 
-const handleGoogleLogin = async (credentialResponse) => {
-  const token = credentialResponse.credential;
-   const decoded = jwtDecode(token);
+  const handleGoogleLogin = async (credentialResponse) => {
+    const token = credentialResponse.credential;
+    const decoded = jwtDecode(token);
 
-  // Optional: console.log(decoded); // for debugging
+    // Optional: console.log(decoded); // for debugging
 
-  try {
-    const res = await axios.post(`${API_BASE}/auth/google`, { token });
-    const { token: jwtToken, user } = res.data;
+    try {
+      const res = await axios.post(`${API_BASE}/auth/google`, { token });
+      const { token: jwtToken, user } = res.data;
 
-    Cookies.set("token", jwtToken, { expires: 7 });
-    Cookies.set("firstName", user.firstName, { expires: 7 });
-    Cookies.set("lastName", user.lastName, { expires: 7 });
-    Cookies.set("email", user.email, { expires: 7 });
-    Cookies.set("picLink", user.picLink || "", { expires: 7 });
+      Cookies.set("token", jwtToken, { expires: 7 });
+      Cookies.set("firstName", user.firstName, { expires: 7 });
+      Cookies.set("lastName", user.lastName, { expires: 7 });
+      Cookies.set("email", user.email, { expires: 7 });
+      Cookies.set("picLink", user.picLink || "", { expires: 7 });
 
-    toast.success("Login successful!");
+      toast.success("Login successful!");
 
-    Swal.fire({
-      title: 'Allow access to local folder?',
-      text: 'We need permission to store data in your local system folder.',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'Allow',
-      cancelButtonText: 'Deny',
-      reverseButtons: true
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const dirHandle = await window.showDirectoryPicker();
-          await saveFolderHandle(dirHandle);
-          Cookies.set("folderAccess", true, { expires: 365 });
-          Cookies.set("dirName", dirHandle.name, { expires: 365 });
-          console.log("Folder access granted:", dirHandle);
-          navigate("/dashboard");
-        } catch (err) {
-          toast.error("Folder access denied!");
+      Swal.fire({
+        title: 'Allow access to local folder?',
+        text: 'We need permission to store data in your local system folder.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Allow',
+        cancelButtonText: 'Deny',
+        reverseButtons: true
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const dirHandle = await window.showDirectoryPicker();
+            await saveFolderHandle(dirHandle);
+            Cookies.set("folderAccess", true, { expires: 365 });
+            Cookies.set("dirName", dirHandle.name, { expires: 365 });
+            console.log("Folder access granted:", dirHandle);
+            navigate("/dashboard");
+          } catch (err) {
+            toast.error("Folder access denied!");
+            navigate("/dashboard");
+          }
+        } else {
+          Cookies.set("folderAccess", false, { expires: 365 });
           navigate("/dashboard");
         }
-      } else {
-        Cookies.set("folderAccess", false, { expires: 365 });
-        navigate("/dashboard");
-      }
-    });
-  } catch (error) {
-    toast.error("Invalid credentials!");
-    setShowForgot(true);
-  }
-};
+      });
+    } catch (error) {
+      toast.error("Invalid credentials!");
+      setShowForgot(true);
+    }
+  };
 
 
   useEffect(() => {
+    // This background style remains here as it applies to the body element globally
     document.body.style.background = 'radial-gradient(circle at top left,#3b3b98, #000)';
     return () => { document.body.style.background = ''; };
   }, []);
@@ -201,6 +204,21 @@ const handleGoogleLogin = async (credentialResponse) => {
     exitDown: { opacity: 0, y: 500 },
   };
 
+  // Common framer-motion hover/tap properties for buttons
+  const buttonHover = {
+    scale: 1.03, // Slightly grow
+    backgroundColor: '#42a5f5', // Lighter blue on hover for professional look
+    boxShadow: '0 6px 15px rgba(0, 0, 0, 0.3)', // Stronger, more professional shadow
+  };
+  const buttonTap = {
+    scale: 0.97, // Subtle press effect
+  };
+  const buttonTransition = {
+    type: "spring",
+    stiffness: 400,
+    damping: 10
+  };
+
   const getLeftText = () => {
     switch (step) {
       case "login":
@@ -214,26 +232,29 @@ const handleGoogleLogin = async (credentialResponse) => {
       default:
         return null;
     }
-  };
+  }
 
   return (
-    <Container fluid className="background-radial-gradient overflow-hidden" style={{ overflow: 'hidden', height: '100vh', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: 0, left: "35rem", width: '200px', height: '200px', background: 'radial-gradient(circle at center, rgba(128, 0, 128, 1), transparent 70%)', borderRadius: '50%', zIndex: 0 }}></div>
-      <div style={{ position: 'absolute', bottom: 0, right: '5rem', width: '250px', height: '250px', background: 'radial-gradient(circle at center, rgba(128, 0, 128, 1), transparent 70%)', borderRadius: '50%', zIndex: 0 }}></div>
+    <Container fluid className="background-radial-gradient overflow-hidden login-container">
+      {/* Blobs will be handled by CSS classes for responsiveness */}
+      <div className="purple-blob top-left"></div>
+      <div className="purple-blob bottom-right"></div>
       <ToastContainer />
-      <Row className="justify-content-center">
-        <Col md={6} className="text-column text-center text-md-left" style={{ fontWeight: 'bold', marginTop: '14rem', color: 'white' }}>
-          <motion.div initial={{ opacity: 0, x: -1000 }} animate={{ opacity: 1, x: 10 }} transition={{ duration: 1 }} key={step}>
+      <div className="login-wrapper">
+        {/* Text Column */}
+        <div className="text-section">
+          <motion.div >
             {getLeftText()}
           </motion.div>
-        </Col>
+        </div>
 
-        <Col md={6} className="login-column" style={{ zIndex: 1, marginTop: '9rem' }}>
+        {/* Login/Form Column */}
+        <div className="form-section">
           <AnimatePresence mode="wait">
             {step === "login" && (
               <motion.div key="login" variants={formVariants} initial="initialDown" animate="animate" exit="exitUp" transition={{ duration: 1 }}>
-                <Card className="shadow-lg rounded" style={{ width: '65%', marginLeft: '5%' }}>
-                  <Card.Body>
+                <Card className="shadow-lg rounded login-card">
+                  <Card.Body className="login-card-body">
                     <Form className="login-form" onSubmit={handleLogin}>
                       <Form.Group className="mb-3">
                         <Form.Control type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -244,17 +265,25 @@ const handleGoogleLogin = async (credentialResponse) => {
 
                       {showForgot && (
                         <div className="text-end mb-3">
-                          <small style={{ cursor: 'pointer', color: 'blue' }} onClick={() => setStep("email")}>Forgot Password?</small>
+                          <small className="forgot-password-link" onClick={() => setStep("email")}>Forgot Password?</small>
                         </div>
                       )}
 
-                      <Button type="submit" className="signup-button" style={{ width: "100%" }}>Login</Button>
+                      <motion.button
+                        type="submit"
+                        className="signup-button btn btn-primary login-button"
+                        style={{ width: '100%' }}
+                        whileHover={buttonHover}
+                        whileTap={buttonTap}
+                        transition={buttonTransition}
+                      >
+                        Login
+                      </motion.button>
                       <div className="signup-alt">
                         <div className="text-center mt-3">
-                          <small>Don&#39;t have an account? <a onClick={() => navigate('/')} style={{ color: 'blue', cursor: 'pointer' }}>Register Now</a></small>
+                          <small>Don&#39;t have an account? <a onClick={() => navigate('/')} className="register-link">Register Now</a></small>
                         </div>
                         <hr />
-                        <small>or login with:</small>
                         <div className="text-center mt-3">
                         <GoogleLogin
                           onSuccess={handleGoogleLogin}
@@ -270,15 +299,23 @@ const handleGoogleLogin = async (credentialResponse) => {
 
             {step === "email" && (
               <motion.div key="email" variants={formVariants} initial="initialUp" animate="animate" exit="exitDown" transition={{ duration: 1 }}>
-                <Card className="shadow-lg rounded" style={{ width: '60%', marginLeft: '5%', marginTop: '12%' }}>
+                <Card className="shadow-lg rounded email-otp-reset-card">
                   <Card.Body>
                     <Form>
                       <Form.Group className="mb-3" style={{ marginTop: '5%' }}>
                         <Form.Control type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} />
                       </Form.Group>
-                      <Button onClick={sendOtp} className="signup-button" style={{ width: "100%" , marginBottom:"1rem"}}>Send OTP</Button>
+                      <motion.button
+                        onClick={sendOtp}
+                        className="signup-button btn btn-primary send-otp-button"
+                        whileHover={buttonHover}
+                        whileTap={buttonTap}
+                        transition={buttonTransition}
+                      >
+                        Send OTP
+                      </motion.button>
                       
-                      <span style={{ color: "blue", cursor: "pointer" }} onClick={() => setStep("login")}onMouseOver={(e) => e.currentTarget.querySelector('span.text').style.textDecoration = 'underline'}onMouseOut={(e) => e.currentTarget.querySelector('span.text').style.textDecoration = 'none'}>
+                      <span className="go-to-login-link" onClick={() => setStep("login")} onMouseOver={(e) => e.currentTarget.querySelector('span.text').style.textDecoration = 'underline'} onMouseOut={(e) => e.currentTarget.querySelector('span.text').style.textDecoration = 'none'}>
                         <span style={{ marginRight: '4px' }}>👈</span>
                         <span className="text">Go to login</span>
                       </span>
@@ -290,22 +327,34 @@ const handleGoogleLogin = async (credentialResponse) => {
 
             {step === "otp" && (
               <motion.div key="otp" variants={formVariants} initial="initialDown" animate="animate" exit="exitUp" transition={{ duration: 1 }}>
-                <Card className="shadow-lg rounded" style={{ width: '60%', marginLeft: '5%', marginTop: '12%' }}>
+                <Card className="shadow-lg rounded email-otp-reset-card">
                   <Card.Body>
                     <Form>
                       <Form.Group className="mb-3">
                         <Form.Control type="text" placeholder="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} />
                       </Form.Group>
-                      <Button onClick={verifyOtp} className="signup-button" style={{ width: "100%" }}>Verify OTP</Button>
+                      <motion.button
+                        onClick={verifyOtp}
+                        className="signup-button btn btn-primary verify-otp-button"
+                        whileHover={buttonHover}
+                        whileTap={buttonTap}
+                        transition={buttonTransition}
+                      >
+                        Verify OTP
+                      </motion.button>
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-                        <span style={{ color: "blue", cursor: "pointer" }} onClick={() => setStep("login")}onMouseOver={(e) => e.currentTarget.querySelector('span.text').style.textDecoration = 'underline'}onMouseOut={(e) => e.currentTarget.querySelector('span.text').style.textDecoration = 'none'}>
-                        <span style={{ marginRight: '4px' }}>👈</span>
-                        <span className="text">Go to login</span>
-                      </span>
+                      <div className="otp-links-container">
+                        <span className="go-to-login-link" onClick={() => setStep("login")} onMouseOver={(e) => e.currentTarget.querySelector('span.text').style.textDecoration = 'underline'} onMouseOut={(e) => e.currentTarget.querySelector('span.text').style.textDecoration = 'none'}>
+                          <span style={{ marginRight: '4px' }}>👈</span>
+                          <span className="text">Go to login</span>
+                        </span>
 
                         <span
-                          style={{ color: cooldown === 0 && resendCount < 3 ? "blue" : "gray", cursor: cooldown === 0 && resendCount < 3 ? "pointer" : "not-allowed", textDecoration: cooldown === 0 && resendCount < 3 ? 'underline' : 'none'}}onClick={() => {if (cooldown === 0 && resendCount < 3) sendOtp();}}>Resend OTP {cooldown > 0 && `(${cooldown}s)`}</span>
+                          className="resend-otp-link"
+                          style={{ color: cooldown === 0 && resendCount < 3 ? "blue" : "gray", cursor: cooldown === 0 && resendCount < 3 ? "pointer" : "not-allowed", textDecoration: cooldown === 0 && resendCount < 3 ? 'underline' : 'none'}}
+                          onClick={() => {if (cooldown === 0 && resendCount < 3) sendOtp();}}>
+                          Resend OTP {cooldown > 0 && `(${cooldown}s)`}
+                        </span>
                       </div>
                     </Form>
                   </Card.Body>
@@ -315,7 +364,7 @@ const handleGoogleLogin = async (credentialResponse) => {
 
             {step === "reset" && (
               <motion.div key="reset" variants={formVariants} initial="initialUp" animate="animate" exit="exitDown" transition={{ duration: 1 }}>
-                <Card className="shadow-lg rounded" style={{ width: '65%', marginLeft: '5%', marginTop: '10%' }}>
+                <Card className="shadow-lg rounded reset-card">
                   <Card.Body>
                     <Form>
                       <Form.Group className="mb-3">
@@ -324,8 +373,16 @@ const handleGoogleLogin = async (credentialResponse) => {
                       <Form.Group className="mb-3">
                         <Form.Control type="password" placeholder="Confirm Password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} />
                       </Form.Group>
-                      <Button onClick={resetPassword} className="signup-button" style={{ width: "100%" }}>Reset Password</Button>
-                      <span style={{ color: "blue", cursor: "pointer" }} onClick={() => setStep("login")}onMouseOver={(e) => e.currentTarget.querySelector('span.text').style.textDecoration = 'underline'}onMouseOut={(e) => e.currentTarget.querySelector('span.text').style.textDecoration = 'none'}>
+                      <motion.button
+                        onClick={resetPassword}
+                        className="signup-button btn btn-primary reset-password-button"
+                        whileHover={buttonHover}
+                        whileTap={buttonTap}
+                        transition={buttonTransition}
+                      >
+                        Reset Password
+                      </motion.button>
+                      <span className="go-to-login-link" onClick={() => setStep("login")} onMouseOver={(e) => e.currentTarget.querySelector('span.text').style.textDecoration = 'underline'} onMouseOut={(e) => e.currentTarget.querySelector('span.text').style.textDecoration = 'none'}>
                         <span style={{ marginRight: '4px' }}>👈</span>
                         <span className="text">Go to login</span>
                       </span>
@@ -335,8 +392,8 @@ const handleGoogleLogin = async (credentialResponse) => {
               </motion.div>
             )}
           </AnimatePresence>
-        </Col>
-      </Row>
+        </div>
+      </div>
     </Container>
   );
 }

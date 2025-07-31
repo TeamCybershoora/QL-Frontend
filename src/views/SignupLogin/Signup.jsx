@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 /* eslint-disable react/react-in-jsx-scope */
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -24,6 +25,14 @@ function Signup() {
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+useEffect(() => {
+  const handleResize = () => setWindowWidth(window.innerWidth);
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
 
   const handleGoogleLogin = async (credentialResponse) => {
     const token = credentialResponse.credential;
@@ -163,12 +172,11 @@ const handleSignup = (e) => {
         <Col md={6} ref={leftRef} style={{ zIndex: 1 }}>
           <animated.div style={{
             ...leftTextAnimation,
-            padding: '4rem',
             color: '#000',
             textAlign: 'center',
-            ...(window.innerWidth < 768 ? { padding: '2rem' } : {})
+            ...(windowWidth < 768 ? { } : {})
           }}>
-            <h1 style={{ fontWeight: 'bold', marginTop: '8rem', color: 'white' }}>
+            <h1 style={{ fontWeight: 'bold', marginTop: '11rem', color: 'white' }}>
               The best offer<br /><span>for your business</span>
             </h1>
             <p style={{ color: '#aaa' }}>Lorem ipsum dolor sit amet consectetur adipisicing elit...</p>
@@ -178,13 +186,13 @@ const handleSignup = (e) => {
         <Col md={6} ref={cardRef} style={{ zIndex: 1 , marginTop: '5rem' }}>
           <animated.div style={cardAnimation}>
             <Card style={{
-              maxWidth: '500px',
-              width: "70%",
+              width: "60%",
               boxShadow: '0 0 20px rgba(0,0,0,0.2)',
               borderRadius: '1rem',
               backgroundColor: '#fff',
+              marginLeft: '5rem',
               zIndex: 2,
-              ...(window.innerWidth < 768 ? { marginTop: '-4rem', marginBottom:"-4" } : {})
+              ...(windowWidth < 768 ? { marginTop: '-4rem', marginBottom:"-4", width:"100%",marginLeft:""} : {})
             }}>
               <Card.Body style={{ padding: '2rem' }}>
                 <Form onSubmit={handleSignup}>
@@ -226,8 +234,7 @@ const handleSignup = (e) => {
                   <div style={{ textAlign: 'center', marginTop: '1rem' }}>
                     <small>Already have an account? <a style={{ cursor: 'pointer' }} onClick={() => navigate('/login')}>Log in</a></small>
                     <hr />
-                    <small>or sign up with:</small>
-                    <div className="text-center mt-3">
+                    <div className="text-center mt-3" style={{width: '100%'}}>
                         <GoogleLogin
                           onSuccess={handleGoogleLogin}
                           onError={() => toast.error("Login Failed")}
@@ -242,7 +249,10 @@ const handleSignup = (e) => {
       </Row>
       <ToastContainer />
     </Container>
+    
   );
+  
 }
+
 
 export default Signup;

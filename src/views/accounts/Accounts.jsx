@@ -18,6 +18,8 @@ const Accounts = () => {
   const [month, setMonth] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [currentCategory, setCurrentCategory] = useState('');
+  const [year, setYear] = useState('');
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL; 
 
   
@@ -54,6 +56,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL;
       category,
       amount,
       month,
+      year,
       ...(editing && { oldCategory: currentCategory })
     };
 
@@ -76,48 +79,69 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL;
       .finally(() => setSubmitting(false));
   };
 
-  const handleDelete = (categoryToDelete) => {
-    Swal.fire({
-      title: 'Delete this account?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, delete',
-      cancelButtonText: 'Cancel'
-    }).then(result => {
-      if (result.isConfirmed) {
-        const email = Cookies.get('email');
-        axios.post(`${API_BASE}/delete/accounts`, {
-          email,
-          category: categoryToDelete
-        }, { withCredentials: true })
-          .then(() => {
-            Swal.fire('Deleted!', '', 'success');
-            fetchAccounts();
-          })
-          .catch(err => {
-            console.error('Delete error:', err);
-            Swal.fire('Error', 'Could not delete account', 'error');
-          });
-      }
-    });
-  };
+  const handleDelete = (categoryToDelete, monthToDelete, yearToDelete) => {
+  Swal.fire({
+    title: 'Delete this account?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, delete',
+    cancelButtonText: 'Cancel'
+  }).then(result => {
+    if (result.isConfirmed) {
+      const email = Cookies.get('email');
+      axios.post(`${API_BASE}/delete/accounts`, {
+        email,
+        category: categoryToDelete,
+        month: monthToDelete,
+        year: yearToDelete
+      }, { withCredentials: true })
+        .then(() => {
+          Swal.fire('Deleted!', '', 'success');
+          fetchAccounts();
+        })
+        .catch(err => {
+          console.error('Delete error:', err);
+          Swal.fire('Error', 'Could not delete account', 'error');
+        });
+    }
+  });
+};
+
 
   const resetForm = () => {
-    setCategory('');
-    setAmount('');
-    setMonth('');
-    setEditing(false);
-    setCurrentCategory('');
-  };
+  setCategory('');
+  setAmount('');
+  setMonth('');
+  setYear(''); // ✅ reset year
+  setEditing(false);
+  setCurrentCategory('');
+};
+
 
   const startEdit = (acc) => {
-    setEditing(true);
-    setShowModal(true);
-    setCategory(acc.category);
-    setAmount(acc.amount);
-    setMonth(acc.month || '');
-    setCurrentCategory(acc.category);
-  };
+  setEditing(true);
+  setShowModal(true);
+  setCategory(acc.category);
+  setAmount(acc.amount);
+  setMonth(acc.month || '');
+  setYear(acc.year || ''); // ✅
+  setCurrentCategory(acc.category);
+};
+const getLatestAccountsByCategory = (accounts) => {
+  const latestMap = new Map();
+
+  accounts.forEach(acc => {
+    const key = acc.category.toLowerCase();
+    const currentDate = new Date(`${acc.month} 1, ${acc.year}`);
+    
+    if (!latestMap.has(key) || currentDate > latestMap.get(key).date) {
+      latestMap.set(key, { ...acc, date: currentDate });
+    }
+  });
+
+  return Array.from(latestMap.values());
+};
+
 
   return (
     <Container className="mt-4">
@@ -132,14 +156,14 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL;
         <p className="text-center text-muted mt-5">No records found.</p>
       ) : (
         <Row className="mt-4">
-          {accounts.map((acc, idx) => (
+          {getLatestAccountsByCategory(accounts).map((acc, idx) => (
             <Col md={4} key={idx} className="mb-3">
               <Card className="p-3 h-100">
                 <div className="d-flex justify-content-between">
                   <div>
                     <div className="fw-bold text-uppercase">{acc.category}</div>
                     <div className="fw-bold fs-5">₹{acc.amount}</div>
-                    <div className="fw-bold text-muted">Month: {acc.month || '-'}</div>
+                    <div className="fw-bold text-muted"> {acc.month} {acc.year || ''}</div>
                   </div>
                   <Dropdown align="end">
                     <Dropdown.Toggle
@@ -166,7 +190,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL;
                       className="shadow"
                     >
                       <Dropdown.Item onClick={() => startEdit(acc)}>Edit</Dropdown.Item>
-                      <Dropdown.Item onClick={() => handleDelete(acc.category)}>Delete</Dropdown.Item>
+                      <Dropdown.Item onClick={() => handleDelete(acc.category, acc.month, acc.year)}>Delete</Dropdown.Item>
                     </Dropdown.Menu>
                   </AnimatePresence>
                 </Dropdown>
@@ -220,7 +244,18 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL;
                   ))}
                 </Form.Select>
               </FloatingLabel>
-
+              <FloatingLabel label="Select Year" className="mb-3">
+                <Form.Select
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  required
+                >
+                  <option value="">-- Select Year --</option>
+                  {Array.from({ length: 100 }, (_, i) => 2000 + i).map((yr) => (
+                    <option key={yr} value={yr}>{yr}</option>
+                  ))}
+                </Form.Select>
+              </FloatingLabel>
               <Button type="submit" variant="primary" disabled={submitting}>
                 {submitting ? (editing ? "Updating..." : "Adding...") : (editing ? "Edit Account" : "Add Account")}
               </Button>
